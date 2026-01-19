@@ -6,10 +6,10 @@ Copy this into Copilot Chat in Android Studio (Ctrl+Shift+I):
 
 I'm building an Android app in Kotlin with Jetpack Compose that connects to two REST APIs running on a remote NixOS server:
 
-1. Budget Tracker API (https://octopustechnology.net:3001/api)
-2. Health Tracker API (https://octopustechnology.net:3002/api)
+1. Budget Tracker API (https://budget.octopustechnology.net/api)
+2. Health Tracker API (https://health.octopustechnology.net/api)
 
-Both APIs are running in Docker containers managed by Portainer. They use JWT authentication.
+Both APIs are running in Docker containers managed by Portainer and proxied through Nginx Proxy Manager. They use JWT authentication.
 
 I need to create:
 
@@ -44,11 +44,11 @@ I need to create:
    - Material 3 design
 
 API Configuration:
-- Budget Base URL: https://octopustechnology.net:3001/api/
-- Health Base URL: https://octopustechnology.net:3002/api/
+- Budget Base URL: https://budget.octopustechnology.net/api/
+- Health Base URL: https://health.octopustechnology.net/api/
 - Authentication: JWT Bearer token in Authorization header
 - Token expiry: 7 days
-- SSL/TLS: HTTPS enabled
+- SSL/TLS: HTTPS enabled via Nginx Proxy Manager
 
 Please help me set up the initial project structure with:
 - Data models matching the API documentation (see MOBILE_API_DOCS.md)
@@ -74,12 +74,12 @@ Start with the authentication flow and data models. Use the ANDROID_MODELS_REFER
 
 ```bash
 # Test Budget API
-curl -X POST https://octopustechnology.net:3001/api/auth/register \
+curl -X POST https://budget.octopustechnology.net/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"username":"testuser","password":"password123"}'
 
 # Test Health API
-curl -X POST https://octopustechnology.net:3002/api/auth/register \
+curl -X POST https://health.octopustechnology.net/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"username":"testuser","password":"password123"}'
 ```
@@ -92,8 +92,8 @@ Create this file first: `app/src/main/java/com/octopus/apps/ApiConfig.kt`
 package com.octopus.apps
 
 object ApiConfig {
-    const val BUDGET_BASE_URL = "https://octopustechnology.net:3001/api/"
-    const val HEALTH_BASE_URL = "https://octopustechnology.net:3002/api/"
+    const val BUDGET_BASE_URL = "https://budget.octopustechnology.net/api/"
+    const val HEALTH_BASE_URL = "https://health.octopustechnology.net/api/"
 }
 ```
 
@@ -119,8 +119,8 @@ When you make changes to your backend:
 ## Common Issues
 
 **Can't connect to server:**
-- Check firewall allows ports 3001, 3002
 - Check containers are running in Portainer
+- Check Nginx Proxy Manager proxies are online
 - Test with curl first
 
 **Authentication errors:**
