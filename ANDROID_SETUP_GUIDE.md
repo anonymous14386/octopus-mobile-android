@@ -216,25 +216,23 @@ Edit `app/src/main/AndroidManifest.xml` and add before `<application>`:
 
 ## Step 9: Create Configuration File
 
-Create `app/src/main/java/com/octopus/apps/BuildConfig.kt`:
+Create `app/src/main/java/com/octopus/apps/ApiConfig.kt`:
 
 ```kotlin
 package com.octopus.apps
 
 object ApiConfig {
-    // Change these to your server URLs
-    const val BUDGET_BASE_URL = "http://10.0.2.2:3000/api/" // Android emulator localhost
-    const val HEALTH_BASE_URL = "http://10.0.2.2:3001/api/"
-    
-    // For real device testing, use your computer's IP:
-    // const val BUDGET_BASE_URL = "http://192.168.1.XXX:3000/api/"
-    // const val HEALTH_BASE_URL = "http://192.168.1.XXX:3001/api/"
-    
-    // For production:
-    // const val BUDGET_BASE_URL = "https://budget.octopusapps.com/api/"
-    // const val HEALTH_BASE_URL = "https://health.octopusapps.com/api/"
+    // Production URLs using HTTPS with SSL
+    const val BUDGET_BASE_URL = "https://octopustechnology.net:3000/api/"
+    const val HEALTH_BASE_URL = "https://octopustechnology.net:3001/api/"
 }
 ```
+
+**Note:** Your apps are running in Docker containers on your NixOS server. Make sure:
+1. The containers are running (check in Portainer)
+2. Ports 3000 and 3001 are exposed and accessible from your network
+3. If using HTTPS with a domain, update the URLs above
+4. Test the URLs in your browser first to ensure they're accessible
 
 ## Step 10: Using GitHub Copilot in Android Studio
 
@@ -278,18 +276,20 @@ data class Subscription(
 Once you have the project set up, use this prompt in Copilot Chat:
 
 ```
-I'm building an Android app in Kotlin with Jetpack Compose that connects to two REST APIs:
+I'm building an Android app in Kotlin with Jetpack Compose that connects to two REST APIs running on a remote NixOS server:
 
-1. Budget Tracker API (http://localhost:3000/api)
-2. Health Tracker API (http://localhost:3001/api)
+1. Budget Tracker API (https://octopustechnology.net:3000/api)
+2. Health Tracker API (https://octopustechnology.net:3001/api)
 
-Both APIs use JWT authentication. I need to create:
+Both APIs are running in Docker containers managed by Portainer. They use JWT authentication.
+
+I need to create:
 
 1. **Authentication System**
    - Login screen with username/password
    - Register screen
    - Secure token storage using DataStore
-   - Token refresh logic
+   - Token refresh logic (tokens expire after 7 days)
    - Logout functionality
 
 2. **Budget Features**
@@ -315,15 +315,23 @@ Both APIs use JWT authentication. I need to create:
    - Jetpack Compose for UI
    - Material 3 design
 
-Please help me set up the initial project structure with:
-- Data models matching the API documentation
-- Retrofit API interfaces
-- Repository classes
-- ViewModels
-- Navigation setup
-- A bottom navigation with Budget and Health tabs
+API Configuration:
+- Budget Base URL: https://octopustechnology.net:3000/api/
+- Health Base URL: https://octopustechnology.net:3001/api/
+- Authentication: JWT Bearer token in Authorization header
+- Token expiry: 7 days
+- SSL/TLS: HTTPS enabled
 
-Start with the authentication flow and data models.
+Please help me set up the initial project structure with:
+- Data models matching the API documentation (see MOBILE_API_DOCS.md)
+- Retrofit API interfaces with proper error handling
+- Repository classes with offline support
+- ViewModels following MVVM pattern
+- Navigation setup with Compose Navigation
+- A bottom navigation with Budget and Health tabs
+- Proper loading states and error handling
+
+Start with the authentication flow and data models. Use the ANDROID_MODELS_REFERENCE.md file for reference implementations.
 ```
 
 ## Step 12: Recommended Development Order
@@ -367,32 +375,57 @@ Start with the authentication flow and data models.
 
 ## Step 13: Testing the APIs
 
-Before building the app, make sure your APIs are running:
+Before building the app, make sure your APIs are running on your NixOS server:
+
+### Check Containers in Portainer
+
+1. Open Portainer: `https://octopustechnology.net:9000` (or your Portainer URL)
+2. Navigate to Containers
+3. Ensure these containers are running:
+   - `octopus-budget` (port 3000)
+   - `octopus-health` (port 3001)
+4. If stopped, start them in Portainer
+
+### To Update Backend Code (if needed)
+
+Since your apps run in Docker on the remote server:
 
 ```bash
-# Terminal 1 - Budget App
-cd ~/Documents/octopus-budget
-npm install  # if not already done
-npm start
+# SSH into your NixOS server
+ssh user@octopustechnology.net
 
-# Terminal 2 - Health App
-cd ~/Documents/octopus-health
-npm install  # if not already done
-npm start
+# Pull latest changes for budget app
+cd /path/to/octopus-budget
+git pull
+docker-compose restart
+
+# Pull latest changes for health app
+cd /path/to/octopus-health
+git pull
+docker-compose restart
 ```
 
-Test with curl or Postman:
+Or use Portainer:
+1. Go to Containers → Select container
+2. Click "Restart" to reload with latest code
+3. Check logs if there are issues
+
+### Test APIs from your development machine
+
+Test with curl to ensure they're accessible:
 ```bash
 # Test budget login
-curl -X POST http://localhost:3000/api/auth/login \
+curl -X POST https://octopustechnology.net:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"testuser","password":"password123"}'
 
 # Test health login
-curl -X POST http://localhost:3001/api/auth/login \
+curl -X POST https://octopustechnology.net:3001/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"testuser","password":"password123"}'
 ```
+
+**Important:** Make sure your firewall allows connections to ports 3000 and 3001 from your development machine!
 
 ## Step 14: Play Store Preparation (Future)
 
