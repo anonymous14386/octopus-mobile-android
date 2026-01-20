@@ -15,6 +15,7 @@ import com.octopustechnology.octopusapps.data.LoginRequest
 import com.octopustechnology.octopusapps.data.RegisterRequest
 import com.octopustechnology.octopusapps.network.RetrofitInstance
 import com.octopustechnology.octopusapps.ui.theme.OctopusAppsTheme
+import com.octopustechnology.octopusapps.ui.BudgetScreen
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -26,14 +27,45 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AuthScreen()
+                    var authToken by remember { mutableStateOf<String?>(null) }
+                    var selectedApi by remember { mutableStateOf("Budget") }
+                    
+                    if (authToken == null) {
+                        AuthScreen(
+                            onLoginSuccess = { token, api ->
+                                authToken = token
+                                selectedApi = api
+                            }
+                        )
+                    } else {
+                        when (selectedApi) {
+                            "Budget" -> BudgetScreen(
+                                token = authToken!!,
+                                api = RetrofitInstance.budgetApi,
+                                onLogout = { authToken = null }
+                            )
+                            "Health" -> {
+                                // TODO: Add HealthScreen
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text("Health Screen Coming Soon")
+                                    TextButton(onClick = { authToken = null }) {
+                                        Text("Logout")
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
     @Composable
-    fun AuthScreen() {
+    fun AuthScreen(onLoginSuccess: (String, String) -> Unit) {
         var username by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var selectedApi by remember { mutableStateOf("Budget") }
@@ -113,6 +145,11 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             resultMessage = "✅ Login Success: message=${response.message}, token=${response.token}, success=${response.success}"
+                            
+                            // Navigate to main screen on successful login
+                            if (response.success && response.token != null) {
+                                onLoginSuccess(response.token, selectedApi)
+                            }
                         } catch (e: Exception) {
                             val errorDetails = if (e is retrofit2.HttpException) {
                                 "HTTP ${e.code()}: ${e.response()?.errorBody()?.string()}"

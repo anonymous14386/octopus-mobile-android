@@ -2,6 +2,7 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">budget.octopustechnology.net</domain>
-        <domain includeSubdomains="true">health.octopustechnology.net</domain>
+	<domain includeSubdomains="true">health.octopustechnology.net</domain>
+
     </domain-config>
 </network-security-config>
