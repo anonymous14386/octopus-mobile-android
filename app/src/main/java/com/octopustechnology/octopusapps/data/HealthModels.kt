@@ -1,4 +1,14 @@
+
+
 package com.octopustechnology.octopusapps.data
+
+data class Goal(
+    val id: Int? = null,
+    val title: String? = null,
+    val description: String? = null,
+    val deadline: String? = null,
+    val completed: Boolean = false
+)
 
 data class WeightEntry(
     val id: Int? = null,

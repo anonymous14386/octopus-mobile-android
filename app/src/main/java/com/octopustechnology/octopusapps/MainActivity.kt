@@ -1,5 +1,8 @@
 package com.octopustechnology.octopusapps
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,14 +25,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            var authToken by remember { mutableStateOf<String?>(null) }
+            var selectedApi by remember { mutableStateOf("Budget") }
             OctopusAppsTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var authToken by remember { mutableStateOf<String?>(null) }
-                    var selectedApi by remember { mutableStateOf("Budget") }
-                    
                     if (authToken == null) {
                         AuthScreen(
                             onLoginSuccess = { token, api ->
@@ -38,23 +40,49 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     } else {
-                        when (selectedApi) {
-                            "Budget" -> BudgetScreen(
-                                token = authToken!!,
-                                api = RetrofitInstance.budgetApi,
-                                onLogout = { authToken = null }
-                            )
-                            "Health" -> {
-                                // TODO: Add HealthScreen
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Button(
+                                    onClick = { selectedApi = "Budget" },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (selectedApi == "Budget") MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
+                                        contentColor = Color.White
+                                    ),
+                                    modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Health Screen Coming Soon")
-                                    TextButton(onClick = { authToken = null }) {
-                                        Text("Logout")
-                                    }
+                                    Text("Budget")
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = { selectedApi = "Health" },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (selectedApi == "Health") MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
+                                        contentColor = Color.White
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Health")
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                when (selectedApi) {
+                                    "Budget" -> BudgetScreen(
+                                        token = authToken!!,
+                                        api = RetrofitInstance.budgetApi,
+                                        onLogout = { authToken = null }
+                                    )
+                                    "Health" -> com.octopustechnology.octopusapps.ui.HealthScreen(
+                                        token = authToken!!,
+                                        api = RetrofitInstance.healthApi,
+                                        onLogout = { authToken = null }
+                                    )
                                 }
                             }
                         }
@@ -65,7 +93,9 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun AuthScreen(onLoginSuccess: (String, String) -> Unit) {
+    fun AuthScreen(
+        onLoginSuccess: (String, String) -> Unit
+    ) {
         var username by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var selectedApi by remember { mutableStateOf("Budget") }
@@ -79,6 +109,7 @@ class MainActivity : ComponentActivity() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+
             Text(
                 text = "Octopus Apps",
                 style = MaterialTheme.typography.headlineLarge,
