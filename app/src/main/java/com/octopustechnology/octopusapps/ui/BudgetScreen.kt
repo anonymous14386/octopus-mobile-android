@@ -41,7 +41,8 @@ fun BudgetScreen(
             isLoading = true
             try {
                 val authHeader = "Bearer $token"
-                subscriptions = api.getSubscriptions(authHeader)
+    var debts by remember { mutableStateOf<List<Debt>>(emptyList()) }
+    var editingDebt by remember { mutableStateOf<Debt?>(null) }
                 accounts = api.getAccounts(authHeader)
                 income = api.getIncome(authHeader)
                 debts = api.getDebts(authHeader)
@@ -233,7 +234,8 @@ fun BudgetScreen(
                     items(debts) { debt ->
                         DebtCard(debt)
                     }
-                }
+                        editingDebt = null
+                        showAddDialog = "debt"
             }
         }
     }
@@ -243,6 +245,8 @@ fun BudgetScreen(
         AddItemDialog(
             type = type,
             api = api,
+                            editingDebt = debt
+                            showAddDialog = "debt"
             token = token,
             onDismiss = { showAddDialog = null },
             onSuccess = {
@@ -507,17 +511,17 @@ fun DebtCard(debt: Debt) {
 
 @OptIn(ExperimentalMaterial3Api::class) // Add this line
 @Composable
+
 fun AddItemDialog(
     type: String,
     api: com.octopustechnology.octopusapps.network.BudgetApiService,
     token: String,
+    debtToEdit: Debt? = null,
     onDismiss: () -> Unit,
     onSuccess: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
-    var frequency by remember { mutableStateOf("monthly") }
-    var source by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(debtToEdit?.name ?: "") }
+    var amount by remember { mutableStateOf(debtToEdit?.amount?.toString() ?: "") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
@@ -532,8 +536,10 @@ fun AddItemDialog(
                     .padding(24.dp)
                     .fillMaxWidth()
             ) {
+
+                val isEdit = type == "debt" && debtToEdit != null
                 Text(
-                    text = "Add ${type.capitalize()}",
+                    text = if (isEdit) "Edit Debt" else "Add ${type.capitalize()}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -698,73 +704,90 @@ fun AddItemDialog(
                                     if (amountValue == null) {
                                         errorMessage = "Invalid amount"
                                         isLoading = false
-                                        return@launch
-                                    }
-
-                                    when (type) {
-                                        "subscription" -> {
-                                            if (name.isBlank()) {
-                                                errorMessage = "Name is required"
-                                                isLoading = false
-                                                return@launch
-                                            }
-                                            api.addSubscription(
-                                                authHeader,
-                                                Subscription(
-                                                    name = name,
-                                                    amount = amountValue,
-                                                    frequency = frequency
+                                        Button(
+                                            onClick = {
+                                                scope.launch {
+                                                    isLoading = true
+                                                    errorMessage = ""
+                                                    try {
+                                                        val authHeader = "Bearer $token"
+                                                        val amountValue = amount.toDoubleOrNull()
+                                                        if (amountValue == null) {
+                                                            errorMessage = "Invalid amount"
+                                                            isLoading = false
+                                                            return@launch
+                                                        }
+                                                        when (type) {
+                                                            "subscription" -> {
+                                                                api.addSubscription(
+                                                                    authHeader,
+                                                                    Subscription(name = name, amount = amountValue, frequency = "monthly")
+                                                                )
+                                                            }
+                                                            "account" -> {
+                                                                api.addAccount(
+                                                                    authHeader,
+                                                                    Account(name = name, balance = amountValue)
+                                                                )
+                                                            }
+                                                            "income" -> {
+                                                                api.addIncome(
+                                                                    authHeader,
+                                                                    Income(source = source, amount = amountValue, frequency = "monthly")
+                                                                )
+                                                            }
+                                                            "debt" -> {
+                                                                if (name.isBlank()) {
+                                                                    errorMessage = "Name is required"
+                                                                    isLoading = false
+                                                                    return@launch
+                                                                }
+                                                                if (isEdit && debtToEdit != null && debtToEdit.id != null) {
+                                                                    api.updateDebt(
+                                                                        authHeader,
+                                                                        debtToEdit.id,
+                                                                        Debt(
+                                                                            id = debtToEdit.id,
+                                                                            name = name,
+                                                                            amount = amountValue,
+                                                                            balance = debtToEdit.balance,
+                                                                            interest_rate = debtToEdit.interest_rate,
+                                                                            minimum_payment = debtToEdit.minimum_payment,
+                                                                            due_date = debtToEdit.due_date,
+                                                                            notes = debtToEdit.notes
+                                                                        )
+                                                                    )
+                                                                } else {
+                                                                    api.addDebt(
+                                                                        authHeader,
+                                                                        Debt(name = name, amount = amountValue)
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                        onSuccess()
+                                                    } catch (e: Exception) {
+                                                        errorMessage = "Error: ${e.message}"
+                                                    } finally {
+                                                        isLoading = false
+                                                    }
+                                                }
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            enabled = !isLoading,
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFF667EEA)
+                                            )
+                                        ) {
+                                            if (isLoading) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(20.dp),
+                                                    color = Color.White
                                                 )
-                                            )
-                                        }
-                                        "account" -> {
-                                            if (name.isBlank()) {
-                                                errorMessage = "Name is required"
-                                                isLoading = false
-                                                return@launch
+                                            } else {
+                                                Text(if (isEdit) "Save" else "Add")
                                             }
-                                            api.addAccount(
-                                                authHeader,
-                                                Account(name = name, balance = amountValue)
-                                            )
                                         }
-                                        "income" -> {
-                                            api.addIncome(
-                                                authHeader,
-                                                Income(
-                                                    source = source.ifBlank { null },
-                                                    amount = amountValue,
-                                                    frequency = frequency
-                                                )
-                                            )
-                                        }
-                                        "debt" -> {
-                                            if (name.isBlank()) {
-                                                errorMessage = "Name is required"
-                                                isLoading = false
-                                                return@launch
-                                            }
-                                            api.addDebt(
-                                                authHeader,
-                                                Debt(name = name, amount = amountValue)
-                                            )
-                                        }
-                                    }
-                                    onSuccess()
-                                } catch (e: Exception) {
-                                    errorMessage = "Error: ${e.message}"
-                                } finally {
-                                    isLoading = false
-                                }
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = !isLoading,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF667EEA)
-                        )
-                    ) {
-                        if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 color = Color.White

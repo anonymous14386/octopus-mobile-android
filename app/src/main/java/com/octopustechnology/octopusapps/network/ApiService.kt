@@ -33,6 +33,13 @@ interface BudgetApiService {
     
     @POST("api/debts")
     suspend fun addDebt(@Header("Authorization") token: String, @Body debt: Debt): Debt
+
+    @PUT("api/debts/{id}")
+    suspend fun updateDebt(
+        @Header("Authorization") token: String,
+        @Path("id") id: Int,
+        @Body debt: Debt
+    ): Debt
 }
 
 interface HealthApiService {
