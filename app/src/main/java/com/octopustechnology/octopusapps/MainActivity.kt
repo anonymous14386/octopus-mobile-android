@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
                     
                     if (token == null) {
                         LoginScreen(
-                            budgetApi = RetrofitInstance.budgetApi,
+                            healthApi = RetrofitInstance.healthApi,
                             onLoginSuccess = { newToken ->
                                 token = newToken
                             }
