@@ -109,7 +109,7 @@ fun BudgetScreen(
                         SummaryCard(
                             title = "💳 Subscriptions",
                             amount = totalSubscriptions,
-                            color = Color(0xFFDC3545),
+                            color = Color(0xFFFF6B6B),
                             subtitle = "${subscriptions.size} active",
                             modifier = Modifier.weight(1f)
                         )
@@ -151,7 +151,7 @@ fun BudgetScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(sub.name, fontWeight = FontWeight.Medium, color = Color(0xFF28A745))
-                            Text("$${String.format("%.2f", sub.amount)}/${sub.frequency}", color = Color(0xFFDC3545))
+                            Text("$${String.format("%.2f", sub.amount)}/${sub.frequency}", color = Color(0xFFFF6B6B))
                         }
                     }
                 }
@@ -254,7 +254,7 @@ fun AddItemDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E))
         ) {
             Column(
                 modifier = Modifier
@@ -265,7 +265,8 @@ fun AddItemDialog(
                 Text(
                     text = if (isEdit) "Edit Debt" else "Add ${type.replaceFirstChar { it.uppercase() }}",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFF6B6B)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -275,15 +276,27 @@ fun AddItemDialog(
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
-                            label = { Text("Name") },
-                            modifier = Modifier.fillMaxWidth()
+                            label = { Text("Name", color = Color.Gray) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFF667EEA),
+                                unfocusedBorderColor = Color.Gray
+                            )
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = amount,
                             onValueChange = { amount = it },
-                            label = { Text("Amount") },
-                            modifier = Modifier.fillMaxWidth()
+                            label = { Text("Amount", color = Color.Gray) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFF667EEA),
+                                unfocusedBorderColor = Color.Gray
+                            )
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         var expanded by remember { mutableStateOf(false) }
@@ -295,11 +308,17 @@ fun AddItemDialog(
                                 value = frequency,
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Frequency") },
+                                label = { Text("Frequency", color = Color.Gray) },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .menuAnchor()
+                                    .menuAnchor(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    focusedBorderColor = Color(0xFF667EEA),
+                                    unfocusedBorderColor = Color.Gray
+                                )
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
@@ -321,30 +340,54 @@ fun AddItemDialog(
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
-                            label = { Text("Account Name") },
-                            modifier = Modifier.fillMaxWidth()
+                            label = { Text("Account Name", color = Color.Gray) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFF667EEA),
+                                unfocusedBorderColor = Color.Gray
+                            )
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = amount,
                             onValueChange = { amount = it },
-                            label = { Text("Balance") },
-                            modifier = Modifier.fillMaxWidth()
+                            label = { Text("Balance", color = Color.Gray) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFF667EEA),
+                                unfocusedBorderColor = Color.Gray
+                            )
                         )
                     }
                     "income" -> {
                         OutlinedTextField(
                             value = source,
                             onValueChange = { source = it },
-                            label = { Text("Source (Optional)") },
-                            modifier = Modifier.fillMaxWidth()
+                            label = { Text("Source (Optional)", color = Color.Gray) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFF667EEA),
+                                unfocusedBorderColor = Color.Gray
+                            )
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = amount,
                             onValueChange = { amount = it },
-                            label = { Text("Amount") },
-                            modifier = Modifier.fillMaxWidth()
+                            label = { Text("Amount", color = Color.Gray) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFF667EEA),
+                                unfocusedBorderColor = Color.Gray
+                            )
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         var expanded by remember { mutableStateOf(false) }
@@ -356,11 +399,17 @@ fun AddItemDialog(
                                 value = frequency,
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Frequency") },
+                                label = { Text("Frequency", color = Color.Gray) },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .menuAnchor()
+                                    .menuAnchor(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    focusedBorderColor = Color(0xFF667EEA),
+                                    unfocusedBorderColor = Color.Gray
+                                )
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
@@ -382,15 +431,27 @@ fun AddItemDialog(
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
-                            label = { Text("Debt Name") },
-                            modifier = Modifier.fillMaxWidth()
+                            label = { Text("Debt Name", color = Color.Gray) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFF667EEA),
+                                unfocusedBorderColor = Color.Gray
+                            )
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = amount,
                             onValueChange = { amount = it },
-                            label = { Text("Amount") },
-                            modifier = Modifier.fillMaxWidth()
+                            label = { Text("Amount", color = Color.Gray) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFF667EEA),
+                                unfocusedBorderColor = Color.Gray
+                            )
                         )
                     }
                 }
@@ -413,7 +474,10 @@ fun AddItemDialog(
                     OutlinedButton(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
-                        enabled = !isLoading
+                        enabled = !isLoading,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = Color.White
+                        )
                     ) {
                         Text("Cancel")
                     }
