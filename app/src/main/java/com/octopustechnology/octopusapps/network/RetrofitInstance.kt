@@ -6,6 +6,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
+    private const val AUTH_BASE_URL = "https://auth.octopustechnology.net/"
     private const val BUDGET_BASE_URL = "https://budget.octopustechnology.net/"
     private const val HEALTH_BASE_URL = "https://health.octopustechnology.net/"
 
@@ -16,6 +17,15 @@ object RetrofitInstance {
     private val client = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
         .build()
+
+    val authApi: AuthApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(AUTH_BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(AuthApiService::class.java)
+    }
 
     val budgetApi: BudgetApiService by lazy {
         Retrofit.Builder()

@@ -3,13 +3,16 @@ package com.octopustechnology.octopusapps.network
 import com.octopustechnology.octopusapps.data.*
 import retrofit2.http.*
 
-interface BudgetApiService {
+// Centralized Auth Service
+interface AuthApiService {
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): RegisterResponse
 
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): LoginResponse
-    
+}
+
+interface BudgetApiService {
     @GET("api/subscriptions")
     suspend fun getSubscriptions(@Header("Authorization") token: String): ApiListResponse<Subscription>
     
@@ -43,12 +46,6 @@ interface BudgetApiService {
 }
 
 interface HealthApiService {
-    @POST("api/auth/register")
-    suspend fun register(@Body request: RegisterRequest): RegisterResponse
-
-    @POST("api/auth/login")
-    suspend fun login(@Body request: LoginRequest): LoginResponse
-
     // Weight
     @GET("api/health/weight")
     suspend fun getWeights(@Header("Authorization") token: String): ApiListResponse<WeightEntry>

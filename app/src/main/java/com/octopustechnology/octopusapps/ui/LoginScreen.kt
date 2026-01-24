@@ -14,13 +14,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.octopustechnology.octopusapps.data.LoginRequest
-import com.octopustechnology.octopusapps.network.HealthApiService
+import com.octopustechnology.octopusapps.network.AuthApiService
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    healthApi: HealthApiService,
+    authApi: AuthApiService,
     onLoginSuccess: (String) -> Unit
 ) {
     var username by remember { mutableStateOf("") }
@@ -92,8 +92,8 @@ fun LoginScreen(
                     isLoading = true
                     errorMessage = ""
                     try {
-                        // Login via health API (no CAPTCHA required) - token works for all services with shared JWT secret
-                        val response = healthApi.login(LoginRequest(username, password))
+                        // Login via centralized auth service - token works for all Octopus services
+                        val response = authApi.login(LoginRequest(username, password))
                         if (response.success && response.token != null) {
                             onLoginSuccess(response.token)
                         } else {
