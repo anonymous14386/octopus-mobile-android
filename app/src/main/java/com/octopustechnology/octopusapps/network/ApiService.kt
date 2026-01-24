@@ -7,39 +7,39 @@ interface BudgetApiService {
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): RegisterResponse
 
-    @POST("api/auth/login")
+    @POST("api/auth/mobile-login")
     suspend fun login(@Body request: LoginRequest): LoginResponse
     
     @GET("api/subscriptions")
-    suspend fun getSubscriptions(@Header("Authorization") token: String): List<Subscription>
+    suspend fun getSubscriptions(@Header("Authorization") token: String): ApiListResponse<Subscription>
     
     @POST("api/subscriptions")
-    suspend fun addSubscription(@Header("Authorization") token: String, @Body subscription: Subscription): Subscription
+    suspend fun addSubscription(@Header("Authorization") token: String, @Body subscription: Subscription): ApiSingleResponse<Subscription>
     
     @GET("api/accounts")
-    suspend fun getAccounts(@Header("Authorization") token: String): List<Account>
+    suspend fun getAccounts(@Header("Authorization") token: String): ApiListResponse<Account>
     
     @POST("api/accounts")
-    suspend fun addAccount(@Header("Authorization") token: String, @Body account: Account): Account
+    suspend fun addAccount(@Header("Authorization") token: String, @Body account: Account): ApiSingleResponse<Account>
     
     @GET("api/income")
-    suspend fun getIncome(@Header("Authorization") token: String): List<Income>
+    suspend fun getIncome(@Header("Authorization") token: String): ApiListResponse<Income>
     
     @POST("api/income")
-    suspend fun addIncome(@Header("Authorization") token: String, @Body income: Income): Income
+    suspend fun addIncome(@Header("Authorization") token: String, @Body income: Income): ApiSingleResponse<Income>
     
     @GET("api/debts")
-    suspend fun getDebts(@Header("Authorization") token: String): List<Debt>
+    suspend fun getDebts(@Header("Authorization") token: String): ApiListResponse<Debt>
     
     @POST("api/debts")
-    suspend fun addDebt(@Header("Authorization") token: String, @Body debt: Debt): Debt
+    suspend fun addDebt(@Header("Authorization") token: String, @Body debt: Debt): ApiSingleResponse<Debt>
 
     @PUT("api/debts/{id}")
     suspend fun updateDebt(
         @Header("Authorization") token: String,
         @Path("id") id: Int,
         @Body debt: Debt
-    ): Debt
+    ): ApiSingleResponse<Debt>
 }
 
 interface HealthApiService {

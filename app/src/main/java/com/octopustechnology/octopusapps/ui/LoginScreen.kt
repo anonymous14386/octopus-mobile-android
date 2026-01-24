@@ -14,13 +14,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.octopustechnology.octopusapps.data.LoginRequest
-import com.octopustechnology.octopusapps.network.HealthApiService
+import com.octopustechnology.octopusapps.network.BudgetApiService
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    healthApi: HealthApiService,
+    budgetApi: BudgetApiService,
     onLoginSuccess: (String) -> Unit
 ) {
     var username by remember { mutableStateOf("") }
@@ -92,8 +92,8 @@ fun LoginScreen(
                     isLoading = true
                     errorMessage = ""
                     try {
-                        // Login via health API (no CAPTCHA required) - token works for all services with shared JWT secret
-                        val response = healthApi.login(LoginRequest(username, password))
+                        // Login via budget API mobile endpoint (no CAPTCHA) - token works for all services with shared JWT secret
+                        val response = budgetApi.login(LoginRequest(username, password))
                         if (response.success && response.token != null) {
                             onLoginSuccess(response.token)
                         } else {

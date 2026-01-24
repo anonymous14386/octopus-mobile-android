@@ -42,10 +42,10 @@ fun BudgetScreen(
             isLoading = true
             try {
                 val authHeader = "Bearer $token"
-                subscriptions = api.getSubscriptions(authHeader)
-                accounts = api.getAccounts(authHeader)
-                incomes = api.getIncome(authHeader)
-                debts = api.getDebts(authHeader)
+                subscriptions = api.getSubscriptions(authHeader).data
+                accounts = api.getAccounts(authHeader).data
+                incomes = api.getIncome(authHeader).data
+                debts = api.getDebts(authHeader).data
                 errorMessage = ""
             } catch (e: Exception) {
                 errorMessage = "Error loading data: ${e.message}"
