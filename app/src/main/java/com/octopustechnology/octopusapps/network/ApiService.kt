@@ -3,7 +3,7 @@ package com.octopustechnology.octopusapps.network
 import com.octopustechnology.octopusapps.data.*
 import retrofit2.http.*
 
-// Centralized Auth Service
+// Centralized Auth Service (optional, can use budget/health proxies instead)
 interface AuthApiService {
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): RegisterResponse
@@ -13,6 +13,13 @@ interface AuthApiService {
 }
 
 interface BudgetApiService {
+    // Auth endpoints (proxied to octopus-auth)
+    @POST("api/auth/login")
+    suspend fun login(@Body request: LoginRequest): LoginResponse
+
+    @POST("api/auth/register")
+    suspend fun register(@Body request: RegisterRequest): RegisterResponse
+
     @GET("api/subscriptions")
     suspend fun getSubscriptions(@Header("Authorization") token: String): ApiListResponse<Subscription>
     
