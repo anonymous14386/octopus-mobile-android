@@ -8,6 +8,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.octopustechnology.octopusapps.network.BudgetApiService
 import com.octopustechnology.octopusapps.network.HealthApiService
 
@@ -24,28 +26,30 @@ fun MainScreen(
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = Color(0xFF2D2D2D)
+                containerColor = Color(0xFF2D2D2D),
+                tonalElevation = 0.dp,
+                modifier = Modifier.height(56.dp)
             ) {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Budget") },
-                    label = { Text("Budget") },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Budget", modifier = Modifier.size(20.dp)) },
+                    label = { Text("Budget", fontSize = 11.sp) },
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color(0xFF667EEA),
                         selectedTextColor = Color(0xFF667EEA),
-                        indicatorColor = Color(0xFF667EEA).copy(alpha = 0.1f)
+                        indicatorColor = Color.Transparent
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Favorite, contentDescription = "Health") },
-                    label = { Text("Health") },
+                    icon = { Icon(Icons.Default.Favorite, contentDescription = "Health", modifier = Modifier.size(20.dp)) },
+                    label = { Text("Health", fontSize = 11.sp) },
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color(0xFF28A745),
                         selectedTextColor = Color(0xFF28A745),
-                        indicatorColor = Color(0xFF28A745).copy(alpha = 0.1f)
+                        indicatorColor = Color.Transparent
                     )
                 )
             }
