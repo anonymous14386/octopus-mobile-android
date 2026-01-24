@@ -9,9 +9,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,7 +30,7 @@ fun BudgetScreen(
 ) {
     var subscriptions by remember { mutableStateOf<List<Subscription>>(emptyList()) }
     var accounts by remember { mutableStateOf<List<Account>>(emptyList()) }
-    var income by remember { mutableStateOf<List<Income>>(emptyList()) }
+    var incomes by remember { mutableStateOf<List<Income>>(emptyList()) }
     var debts by remember { mutableStateOf<List<Debt>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
@@ -41,10 +42,9 @@ fun BudgetScreen(
             isLoading = true
             try {
                 val authHeader = "Bearer $token"
-    var debts by remember { mutableStateOf<List<Debt>>(emptyList()) }
-    var editingDebt by remember { mutableStateOf<Debt?>(null) }
+                subscriptions = api.getSubscriptions(authHeader)
                 accounts = api.getAccounts(authHeader)
-                income = api.getIncome(authHeader)
+                incomes = api.getIncome(authHeader)
                 debts = api.getDebts(authHeader)
                 errorMessage = ""
             } catch (e: Exception) {
@@ -59,183 +59,161 @@ fun BudgetScreen(
         loadData()
     }
 
-    // Calculate totals
-    val totalDebt = debts.sumOf { it.balance ?: it.amount }
-    val monthlyIncome = income.sumOf { inc ->
-        when (inc.frequency.lowercase()) {
-            "weekly" -> inc.amount * 4.33
-            "biweekly" -> inc.amount * 2.166667
-            else -> inc.amount
-        }
-    }
-    val totalBalance = accounts.sumOf { it.balance }
-    val subscriptionTotal = subscriptions.sumOf { sub ->
-        when (sub.frequency.lowercase()) {
-            "daily" -> sub.amount * 30
-            "weekly" -> sub.amount * 4.33
-            "yearly" -> sub.amount / 12
-            else -> sub.amount
-        }
-    }
+    val totalSubscriptions = subscriptions.sumOf { it.amount }
+    val totalAccounts = accounts.sumOf { it.balance }
+    val totalIncome = incomes.sumOf { it.amount }
+    val totalDebts = debts.sumOf { it.amount }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("💰 Budget Tracker", fontWeight = FontWeight.Bold) },
+                title = { Text("💰 Budget Tracker") },
                 actions = {
                     TextButton(onClick = onLogout) {
-                        Text("Logout", color = Color.White)
+                        Text("Logout", color = Color(0xFF667EEA))
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF667EEA)
-                )
+                }
             )
         }
-    ) { padding ->
+    ) { paddingValues ->
         if (isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
+                    .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
-            }
-        } else if (errorMessage.isNotEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colorScheme.error
-                )
-                Button(onClick = { loadData() }, modifier = Modifier.padding(top = 16.dp)) {
-                    Text("Retry")
-                }
+                CircularProgressIndicator(color = Color(0xFF667EEA))
             }
         } else {
-            // Responsive grid for summary cards (2x2)
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .background(Color(0xFFF5F7FA)),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Summary Cards
                 item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            SummaryCard(
-                                title = "💳 Total Debt",
-                                amount = totalDebt,
-                                color = Color(0xFFDC3545),
-                                modifier = Modifier.weight(1f)
-                            )
-                            SummaryCard(
-                                title = "💵 Income",
-                                amount = monthlyIncome,
-                                color = Color(0xFF28A745),
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            SummaryCard(
-                                title = "🏦 Accounts",
-                                amount = totalBalance,
-                                color = Color(0xFF667EEA),
-                                modifier = Modifier.weight(1f)
-                            )
-                            SummaryCard(
-                                title = "📊 Subs/mo",
-                                amount = subscriptionTotal,
-                                color = Color(0xFF667EEA),
-                                subtitle = "${subscriptions.size} subscriptions",
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                        SummaryCard(
+                            title = "📊 Total Income",
+                            amount = totalIncome,
+                            color = Color(0xFF28A745),
+                            subtitle = "${incomes.size} sources",
+                            modifier = Modifier.weight(1f)
+                        )
+                        SummaryCard(
+                            title = "💳 Subscriptions",
+                            amount = totalSubscriptions,
+                            color = Color(0xFFDC3545),
+                            subtitle = "${subscriptions.size} active",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        SummaryCard(
+                            title = "🏦 Accounts",
+                            amount = totalAccounts,
+                            color = Color(0xFF667EEA),
+                            subtitle = "${accounts.size} accounts",
+                            modifier = Modifier.weight(1f)
+                        )
+                        SummaryCard(
+                            title = "📉 Total Debt",
+                            amount = totalDebts,
+                            color = Color(0xFFFF6B6B),
+                            subtitle = "${debts.size} debts",
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
 
                 // Subscriptions Section
-                item {
-                    SectionHeader("📺 Subscriptions") {
-                        showAddDialog = "subscription"
-                    }
-                }
-                if (subscriptions.isEmpty()) {
-                    item {
-                        EmptyState("No subscriptions yet")
-                    }
-                } else {
-                    items(subscriptions) { subscription ->
-                        SubscriptionCard(subscription)
+                item { SectionHeader("Subscriptions") { showAddDialog = "subscription" } }
+                items(subscriptions) { sub ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(sub.name, fontWeight = FontWeight.Medium, color = Color(0xFF28A745))
+                            Text("$${String.format("%.2f", sub.amount)}/${sub.frequency}", color = Color(0xFFDC3545))
+                        }
                     }
                 }
 
                 // Accounts Section
-                item {
-                    SectionHeader("🏦 Accounts") {
-                        showAddDialog = "account"
-                    }
-                }
-                if (accounts.isEmpty()) {
-                    item {
-                        EmptyState("No accounts yet")
-                    }
-                } else {
-                    items(accounts) { account ->
-                        AccountCard(account)
+                item { SectionHeader("Accounts") { showAddDialog = "account" } }
+                items(accounts) { acc ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(acc.name, fontWeight = FontWeight.Medium, color = Color(0xFF28A745))
+                            Text("$${String.format("%.2f", acc.balance)}", color = Color(0xFF28A745))
+                        }
                     }
                 }
 
                 // Income Section
-                item {
-                    SectionHeader("💵 Income") {
-                        showAddDialog = "income"
-                    }
-                }
-                if (income.isEmpty()) {
-                    item {
-                        EmptyState("No income recorded")
-                    }
-                } else {
-                    items(income) { inc ->
-                        IncomeCard(inc)
+                item { SectionHeader("Income") { showAddDialog = "income" } }
+                items(incomes) { inc ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(inc.source ?: "Income", fontWeight = FontWeight.Medium, color = Color(0xFF28A745))
+                            Text("$${String.format("%.2f", inc.amount)}/${inc.frequency}", color = Color(0xFF28A745))
+                        }
                     }
                 }
 
                 // Debts Section
-                item {
-                    SectionHeader("💳 Debts") {
-                        showAddDialog = "debt"
+                item { SectionHeader("Debts") { showAddDialog = "debt" } }
+                items(debts) { debt ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(debt.name, fontWeight = FontWeight.Medium, color = Color(0xFF28A745))
+                            Text("$${String.format("%.2f", debt.amount)}", color = Color(0xFFDC3545))
+                        }
                     }
                 }
-                if (debts.isEmpty()) {
-                    item {
-                        EmptyState("No debts")
-                    }
-                } else {
-                    items(debts) { debt ->
-                        DebtCard(debt)
-                    }
-                        editingDebt = null
-                        showAddDialog = "debt"
+
+                item { Spacer(modifier = Modifier.height(16.dp)) }
             }
         }
     }
@@ -245,8 +223,6 @@ fun BudgetScreen(
         AddItemDialog(
             type = type,
             api = api,
-                            editingDebt = debt
-                            showAddDialog = "debt"
             token = token,
             onDismiss = { showAddDialog = null },
             onSuccess = {
@@ -257,261 +233,8 @@ fun BudgetScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SummaryCard(
-    title: String,
-    amount: Double,
-    color: Color,
-    modifier: Modifier = Modifier,
-    subtitle: String? = null
-) {
-    val isDark = MaterialTheme.colorScheme.background == Color(0xFF222222)
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isDark) Color.Black else Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = title,
-                fontSize = 12.sp,
-                color = if (isDark) Color.Green else Color(0xFF888888),
-                fontWeight = FontWeight.SemiBold
-            )
-            val valueText = when {
-                title.contains("Weight", ignoreCase = true) -> String.format("%.2f lbs", amount)
-                title.contains("Exercise", ignoreCase = true) -> String.format("%.0f min", amount)
-                title.contains("Calories", ignoreCase = true) -> String.format("%.0f cal", amount)
-                title.contains("Goals", ignoreCase = true) -> String.format("%.0f", amount)
-                else -> "$${String.format("%.2f", amount)}"
-            }
-            Text(
-                text = valueText,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = color,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-            subtitle?.let {
-                Text(
-                    text = it,
-                    fontSize = 11.sp,
-                    color = if (isDark) Color.Green else Color(0xFF888888),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SectionHeader(title: String, onAdd: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            FloatingActionButton(
-                onClick = onAdd,
-                modifier = Modifier.size(40.dp),
-                containerColor = Color(0xFF667EEA)
-            ) {
-                Icon(Icons.Default.Add, "Add", tint = Color.White)
-            }
-        }
-    }
-}
-
-@Composable
-fun EmptyState(message: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Text(
-            text = message,
-            modifier = Modifier.padding(32.dp),
-            color = Color(0xFF888888),
-            style = MaterialTheme.typography.bodyMedium
-        )
-    }
-}
-
-@Composable
-fun SubscriptionCard(subscription: Subscription) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = subscription.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "$${String.format("%.2f", subscription.amount)} / ${subscription.frequency}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFF667EEA),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-                if (subscription.category != null) {
-                    Text(
-                        text = "Category: ${subscription.category}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF888888),
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AccountCard(account: Account) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = account.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "Balance: $${String.format("%.2f", account.balance)}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFF28A745),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-                if (account.type != null) {
-                    Text(
-                        text = "Type: ${account.type}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF888888),
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun IncomeCard(income: Income) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                if (income.source != null) {
-                    Text(
-                        text = income.source,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                Text(
-                    text = "$${String.format("%.2f", income.amount)} / ${income.frequency}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFF28A745),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun DebtCard(debt: Debt) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = debt.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = "Amount: $${String.format("%.2f", debt.amount)}",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFFDC3545),
-                modifier = Modifier.padding(top = 4.dp)
-            )
-            if (debt.balance != null) {
-                Text(
-                    text = "Balance: $${String.format("%.2f", debt.balance)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF555555),
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-            }
-            if (debt.interest_rate != null) {
-                Text(
-                    text = "Interest Rate: ${debt.interest_rate}%",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF888888),
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class) // Add this line
-@Composable
-
 fun AddItemDialog(
     type: String,
     api: com.octopustechnology.octopusapps.network.BudgetApiService,
@@ -522,6 +245,8 @@ fun AddItemDialog(
 ) {
     var name by remember { mutableStateOf(debtToEdit?.name ?: "") }
     var amount by remember { mutableStateOf(debtToEdit?.amount?.toString() ?: "") }
+    var frequency by remember { mutableStateOf("monthly") }
+    var source by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
@@ -536,10 +261,9 @@ fun AddItemDialog(
                     .padding(24.dp)
                     .fillMaxWidth()
             ) {
-
                 val isEdit = type == "debt" && debtToEdit != null
                 Text(
-                    text = if (isEdit) "Edit Debt" else "Add ${type.capitalize()}",
+                    text = if (isEdit) "Edit Debt" else "Add ${type.replaceFirstChar { it.uppercase() }}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -583,7 +307,7 @@ fun AddItemDialog(
                             ) {
                                 listOf("daily", "weekly", "monthly", "yearly").forEach { freq ->
                                     DropdownMenuItem(
-                                        text = { Text(freq.capitalize()) },
+                                        text = { Text(freq.replaceFirstChar { it.uppercase() }) },
                                         onClick = {
                                             frequency = freq
                                             expanded = false
@@ -644,7 +368,7 @@ fun AddItemDialog(
                             ) {
                                 listOf("weekly", "biweekly", "monthly", "yearly").forEach { freq ->
                                     DropdownMenuItem(
-                                        text = { Text(freq.capitalize()) },
+                                        text = { Text(freq.replaceFirstChar { it.uppercase() }) },
                                         onClick = {
                                             frequency = freq
                                             expanded = false
@@ -704,96 +428,77 @@ fun AddItemDialog(
                                     if (amountValue == null) {
                                         errorMessage = "Invalid amount"
                                         isLoading = false
-                                        Button(
-                                            onClick = {
-                                                scope.launch {
-                                                    isLoading = true
-                                                    errorMessage = ""
-                                                    try {
-                                                        val authHeader = "Bearer $token"
-                                                        val amountValue = amount.toDoubleOrNull()
-                                                        if (amountValue == null) {
-                                                            errorMessage = "Invalid amount"
-                                                            isLoading = false
-                                                            return@launch
-                                                        }
-                                                        when (type) {
-                                                            "subscription" -> {
-                                                                api.addSubscription(
-                                                                    authHeader,
-                                                                    Subscription(name = name, amount = amountValue, frequency = "monthly")
-                                                                )
-                                                            }
-                                                            "account" -> {
-                                                                api.addAccount(
-                                                                    authHeader,
-                                                                    Account(name = name, balance = amountValue)
-                                                                )
-                                                            }
-                                                            "income" -> {
-                                                                api.addIncome(
-                                                                    authHeader,
-                                                                    Income(source = source, amount = amountValue, frequency = "monthly")
-                                                                )
-                                                            }
-                                                            "debt" -> {
-                                                                if (name.isBlank()) {
-                                                                    errorMessage = "Name is required"
-                                                                    isLoading = false
-                                                                    return@launch
-                                                                }
-                                                                if (isEdit && debtToEdit != null && debtToEdit.id != null) {
-                                                                    api.updateDebt(
-                                                                        authHeader,
-                                                                        debtToEdit.id,
-                                                                        Debt(
-                                                                            id = debtToEdit.id,
-                                                                            name = name,
-                                                                            amount = amountValue,
-                                                                            balance = debtToEdit.balance,
-                                                                            interest_rate = debtToEdit.interest_rate,
-                                                                            minimum_payment = debtToEdit.minimum_payment,
-                                                                            due_date = debtToEdit.due_date,
-                                                                            notes = debtToEdit.notes
-                                                                        )
-                                                                    )
-                                                                } else {
-                                                                    api.addDebt(
-                                                                        authHeader,
-                                                                        Debt(name = name, amount = amountValue)
-                                                                    )
-                                                                }
-                                                            }
-                                                        }
-                                                        onSuccess()
-                                                    } catch (e: Exception) {
-                                                        errorMessage = "Error: ${e.message}"
-                                                    } finally {
-                                                        isLoading = false
-                                                    }
-                                                }
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            enabled = !isLoading,
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFF667EEA)
+                                        return@launch
+                                    }
+                                    when (type) {
+                                        "subscription" -> {
+                                            api.addSubscription(
+                                                authHeader,
+                                                Subscription(name = name, amount = amountValue, frequency = frequency)
                                             )
-                                        ) {
-                                            if (isLoading) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(20.dp),
-                                                    color = Color.White
+                                        }
+                                        "account" -> {
+                                            api.addAccount(
+                                                authHeader,
+                                                Account(name = name, balance = amountValue)
+                                            )
+                                        }
+                                        "income" -> {
+                                            api.addIncome(
+                                                authHeader,
+                                                Income(source = source, amount = amountValue, frequency = frequency)
+                                            )
+                                        }
+                                        "debt" -> {
+                                            if (name.isBlank()) {
+                                                errorMessage = "Name is required"
+                                                isLoading = false
+                                                return@launch
+                                            }
+                                            if (isEdit && debtToEdit != null && debtToEdit.id != null) {
+                                                api.updateDebt(
+                                                    authHeader,
+                                                    debtToEdit.id,
+                                                    Debt(
+                                                        id = debtToEdit.id,
+                                                        name = name,
+                                                        amount = amountValue,
+                                                        balance = debtToEdit.balance,
+                                                        interest_rate = debtToEdit.interest_rate,
+                                                        minimum_payment = debtToEdit.minimum_payment,
+                                                        due_date = debtToEdit.due_date,
+                                                        notes = debtToEdit.notes
+                                                    )
                                                 )
                                             } else {
-                                                Text(if (isEdit) "Save" else "Add")
+                                                api.addDebt(
+                                                    authHeader,
+                                                    Debt(name = name, amount = amountValue)
+                                                )
                                             }
                                         }
+                                    }
+                                    onSuccess()
+                                } catch (e: Exception) {
+                                    errorMessage = "Error: ${e.message}"
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF667EEA)
+                        )
+                    ) {
+                        if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 color = Color.White
                             )
                         } else {
-                            Text("Add")
+                            Text(if (isEdit) "Save" else "Add")
                         }
                     }
                 }
@@ -801,5 +506,3 @@ fun AddItemDialog(
         }
     }
 }
-
-fun String.capitalize() = replaceFirstChar { it.uppercase() }

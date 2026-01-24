@@ -110,8 +110,7 @@ fun HealthScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .background(Color(0xFFF5F7FA)),
+                    .padding(padding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -174,9 +173,9 @@ fun HealthScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
                             shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
                         ) {
-                            Text("${entry.weight} lbs - ${entry.notes ?: "No notes"}", modifier = Modifier.padding(12.dp))
+                            Text("${entry.weight} lbs - ${entry.notes ?: "No notes"}", modifier = Modifier.padding(12.dp), color = Color(0xFF28A745))
                         }
                     }
                 }
@@ -193,9 +192,9 @@ fun HealthScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
                             shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
                         ) {
-                            Text("${entry.exercise_type}: ${entry.duration_minutes} min, ${entry.calories_burned ?: 0} cal", modifier = Modifier.padding(12.dp))
+                            Text("${entry.exercise_type}: ${entry.duration_minutes} min, ${entry.calories_burned ?: 0} cal", modifier = Modifier.padding(12.dp), color = Color(0xFF28A745))
                         }
                     }
                 }
@@ -212,9 +211,9 @@ fun HealthScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
                             shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
                         ) {
-                            Text("${entry.description} - ${entry.calories ?: 0} cal", modifier = Modifier.padding(12.dp))
+                            Text("${entry.description} - ${entry.calories ?: 0} cal", modifier = Modifier.padding(12.dp), color = Color(0xFF28A745))
                         }
                     }
                 }
