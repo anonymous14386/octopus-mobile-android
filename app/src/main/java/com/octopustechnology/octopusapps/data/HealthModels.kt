@@ -20,7 +20,7 @@ data class WeightEntry(
 data class Meal(
     val id: Int? = null,
     val date: String,
-    val meal_type: String,
+    val time: String? = null,
     val description: String,
     val calories: Int? = null,
     val notes: String? = null
@@ -29,8 +29,8 @@ data class Meal(
 data class Exercise(
     val id: Int? = null,
     val date: String,
-    val exercise_type: String,
-    val duration_minutes: Int,
+    val type: String,
+    val duration: Int,
     val calories_burned: Int? = null,
     val notes: String? = null
 )

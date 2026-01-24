@@ -145,7 +145,20 @@ fun AddHealthItemDialog(
                         OutlinedTextField(
                             value = value1,
                             onValueChange = { value1 = it },
-                            label = { Text("Goal Description", color = Color.Gray) },
+                            label = { Text("Goal Title", color = Color.Gray) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFF667EEA),
+                                unfocusedBorderColor = Color.Gray
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = value2,
+                            onValueChange = { value2 = it },
+                            label = { Text("Description (optional)", color = Color.Gray) },
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = Color.White,
@@ -192,16 +205,16 @@ fun AddHealthItemDialog(
                                 try {
                                     when (type) {
                                         "weight" -> {
-                                            api.addWeight(authHeader, WeightEntry(date = today, weight = value1.toDoubleOrNull() ?: 0.0, notes = value2))
+                                            api.addWeight(authHeader, WeightEntry(date = today, weight = value1.toDoubleOrNull() ?: 0.0, notes = value2.ifBlank { null }))
                                         }
                                         "exercise" -> {
-                                            api.addExercise(authHeader, Exercise(date = today, exercise_type = value1, duration_minutes = value2.toIntOrNull() ?: 0, calories_burned = value3.toIntOrNull()))
+                                            api.addExercise(authHeader, Exercise(date = today, type = value1, duration = value2.toIntOrNull() ?: 0, calories_burned = value3.toIntOrNull(), notes = null))
                                         }
                                         "meal" -> {
-                                            api.addMeal(authHeader, Meal(date = today, meal_type = "", description = value1, calories = value2.toIntOrNull(), notes = null))
+                                            api.addMeal(authHeader, Meal(date = today, description = value1, calories = value2.toIntOrNull(), notes = null))
                                         }
                                         "goal" -> {
-                                            api.addGoal(authHeader, Goal(title = value1, description = value1))
+                                            api.addGoal(authHeader, Goal(title = value1, description = value2.ifBlank { null }))
                                         }
                                     }
                                     onSuccess()
