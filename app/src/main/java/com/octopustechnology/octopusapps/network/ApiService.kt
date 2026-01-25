@@ -21,35 +21,35 @@ interface BudgetApiService {
     suspend fun register(@Body request: RegisterRequest): RegisterResponse
 
     @GET("api/subscriptions")
-    suspend fun getSubscriptions(@Header("Authorization") token: String): ApiListResponse<Subscription>
+    suspend fun getSubscriptions(@Header("Authorization") token: String): List<Subscription>
     
     @POST("api/subscriptions")
-    suspend fun addSubscription(@Header("Authorization") token: String, @Body subscription: Subscription): ApiSingleResponse<Subscription>
+    suspend fun addSubscription(@Header("Authorization") token: String, @Body subscription: Subscription): Subscription
     
     @GET("api/accounts")
-    suspend fun getAccounts(@Header("Authorization") token: String): ApiListResponse<Account>
+    suspend fun getAccounts(@Header("Authorization") token: String): List<Account>
     
     @POST("api/accounts")
-    suspend fun addAccount(@Header("Authorization") token: String, @Body account: Account): ApiSingleResponse<Account>
+    suspend fun addAccount(@Header("Authorization") token: String, @Body account: Account): Account
     
     @GET("api/income")
-    suspend fun getIncome(@Header("Authorization") token: String): ApiListResponse<Income>
+    suspend fun getIncome(@Header("Authorization") token: String): List<Income>
     
     @POST("api/income")
-    suspend fun addIncome(@Header("Authorization") token: String, @Body income: Income): ApiSingleResponse<Income>
+    suspend fun addIncome(@Header("Authorization") token: String, @Body income: Income): Income
     
     @GET("api/debts")
-    suspend fun getDebts(@Header("Authorization") token: String): ApiListResponse<Debt>
+    suspend fun getDebts(@Header("Authorization") token: String): List<Debt>
     
     @POST("api/debts")
-    suspend fun addDebt(@Header("Authorization") token: String, @Body debt: Debt): ApiSingleResponse<Debt>
+    suspend fun addDebt(@Header("Authorization") token: String, @Body debt: Debt): Debt
 
     @PUT("api/debts/{id}")
     suspend fun updateDebt(
         @Header("Authorization") token: String,
         @Path("id") id: Int,
         @Body debt: Debt
-    ): ApiSingleResponse<Debt>
+    ): Debt
 }
 
 interface HealthApiService {

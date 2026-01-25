@@ -62,7 +62,7 @@ fun HealthScreen(
     val today = java.time.LocalDate.now().toString()
     val todayExercises = exercises.filter { it.date == today }
     val todayMeals = meals.filter { it.date == today }
-    val todayExerciseMinutes = todayExercises.sumOf { it.duration_minutes }
+    val todayExerciseMinutes = todayExercises.sumOf { it.duration }
     val todayCalories = todayMeals.sumOf { it.calories ?: 0 }
 
     Scaffold(
@@ -194,7 +194,7 @@ fun HealthScreen(
                             shape = RoundedCornerShape(8.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
                         ) {
-                            Text("${entry.exercise_type}: ${entry.duration_minutes} min, ${entry.calories_burned ?: 0} cal", modifier = Modifier.padding(12.dp), color = Color(0xFF28A745))
+                            Text("${entry.type}: ${entry.duration} min, ${entry.calories_burned ?: 0} cal", modifier = Modifier.padding(12.dp), color = Color(0xFF28A745))
                         }
                     }
                 }
