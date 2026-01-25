@@ -36,28 +36,31 @@ fun BudgetScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf<String?>(null) }
+    var refreshTrigger by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
 
-    val loadData = {
-        scope.launch {
-            isLoading = true
-            try {
-                val authHeader = "Bearer $token"
-                subscriptions = api.getSubscriptions(authHeader)
-                accounts = api.getAccounts(authHeader)
-                incomes = api.getIncome(authHeader)
-                debts = api.getDebts(authHeader)
-                errorMessage = ""
-            } catch (e: Exception) {
-                errorMessage = "Error loading data: ${e.message}"
-            } finally {
-                isLoading = false
-            }
+    suspend fun loadData() {
+        isLoading = true
+        try {
+            val authHeader = "Bearer $token"
+            subscriptions = api.getSubscriptions(authHeader)
+            accounts = api.getAccounts(authHeader)
+            incomes = api.getIncome(authHeader)
+            debts = api.getDebts(authHeader)
+            errorMessage = ""
+        } catch (e: Exception) {
+            errorMessage = "Error loading data: ${e.message}"
+        } finally {
+            isLoading = false
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(refreshTrigger) {
         loadData()
+    }
+
+    fun refresh() {
+        refreshTrigger++
     }
 
     val totalSubscriptions = subscriptions.sumOf { it.amount }
@@ -146,7 +149,7 @@ fun BudgetScreen(
                             scope.launch {
                                 try {
                                     api.deleteSubscription("Bearer $token", sub.id!!)
-                                    loadData()
+                                    refresh()
                                 } catch (e: Exception) {
                                     errorMessage = "Failed to delete: ${e.message}"
                                 }
@@ -173,7 +176,7 @@ fun BudgetScreen(
                             scope.launch {
                                 try {
                                     api.deleteAccount("Bearer $token", acc.id!!)
-                                    loadData()
+                                    refresh()
                                 } catch (e: Exception) {
                                     errorMessage = "Failed to delete: ${e.message}"
                                 }
@@ -200,7 +203,7 @@ fun BudgetScreen(
                             scope.launch {
                                 try {
                                     api.deleteIncome("Bearer $token", inc.id!!)
-                                    loadData()
+                                    refresh()
                                 } catch (e: Exception) {
                                     errorMessage = "Failed to delete: ${e.message}"
                                 }
@@ -227,7 +230,7 @@ fun BudgetScreen(
                             scope.launch {
                                 try {
                                     api.deleteDebt("Bearer $token", debt.id!!)
-                                    loadData()
+                                    refresh()
                                 } catch (e: Exception) {
                                     errorMessage = "Failed to delete: ${e.message}"
                                 }
