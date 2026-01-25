@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -140,9 +141,17 @@ fun BudgetScreen(
                 // Subscriptions Section
                 item { SectionHeader("Subscriptions") { showAddDialog = "subscription" } }
                 items(subscriptions) { sub ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                    SwipeableItemCard(
+                        onDelete = {
+                            scope.launch {
+                                try {
+                                    api.deleteSubscription("Bearer $token", sub.id!!)
+                                    loadData()
+                                } catch (e: Exception) {
+                                    errorMessage = "Failed to delete: ${e.message}"
+                                }
+                            }
+                        }
                     ) {
                         Row(
                             modifier = Modifier
@@ -159,9 +168,17 @@ fun BudgetScreen(
                 // Accounts Section
                 item { SectionHeader("Accounts") { showAddDialog = "account" } }
                 items(accounts) { acc ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                    SwipeableItemCard(
+                        onDelete = {
+                            scope.launch {
+                                try {
+                                    api.deleteAccount("Bearer $token", acc.id!!)
+                                    loadData()
+                                } catch (e: Exception) {
+                                    errorMessage = "Failed to delete: ${e.message}"
+                                }
+                            }
+                        }
                     ) {
                         Row(
                             modifier = Modifier
@@ -178,9 +195,17 @@ fun BudgetScreen(
                 // Income Section
                 item { SectionHeader("Income") { showAddDialog = "income" } }
                 items(incomes) { inc ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                    SwipeableItemCard(
+                        onDelete = {
+                            scope.launch {
+                                try {
+                                    api.deleteIncome("Bearer $token", inc.id!!)
+                                    loadData()
+                                } catch (e: Exception) {
+                                    errorMessage = "Failed to delete: ${e.message}"
+                                }
+                            }
+                        }
                     ) {
                         Row(
                             modifier = Modifier
@@ -197,9 +222,17 @@ fun BudgetScreen(
                 // Debts Section
                 item { SectionHeader("Debts") { showAddDialog = "debt" } }
                 items(debts) { debt ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                    SwipeableItemCard(
+                        onDelete = {
+                            scope.launch {
+                                try {
+                                    api.deleteDebt("Bearer $token", debt.id!!)
+                                    loadData()
+                                } catch (e: Exception) {
+                                    errorMessage = "Failed to delete: ${e.message}"
+                                }
+                            }
+                        }
                     ) {
                         Row(
                             modifier = Modifier
@@ -568,5 +601,64 @@ fun AddItemDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SwipeableItemCard(
+    onDelete: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                content()
+            }
+            IconButton(
+                onClick = { showDeleteConfirm = true }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = Color(0xFFFF6B6B)
+                )
+            }
+        }
+    }
+    
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            containerColor = Color(0xFF1E1E1E),
+            title = { Text("Confirm Delete", color = Color.White) },
+            text = { Text("Are you sure you want to delete this item?", color = Color.Gray) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirm = false
+                        onDelete()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B6B))
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showDeleteConfirm = false },
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

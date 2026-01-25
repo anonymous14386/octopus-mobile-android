@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -165,18 +166,24 @@ fun HealthScreen(
                 item {
                     SectionHeader("Log Weight") { showAddDialog = "weight" }
                 }
-                if (todayExercises.isNotEmpty()) {
+                if (weights.filter { it.date == today }.isNotEmpty()) {
                     item {
                         Text("Today's Weights:", fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
                     }
                     items(weights.filter { it.date == today }) { entry ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
-                        ) {
-                            Text("${entry.weight} lbs - ${entry.notes ?: "No notes"}", modifier = Modifier.padding(12.dp), color = Color(0xFF28A745))
-                        }
+                        HealthItemCard(
+                            content = "${entry.weight} lbs - ${entry.notes ?: "No notes"}",
+                            onDelete = {
+                                scope.launch {
+                                    try {
+                                        api.deleteWeight("Bearer $token", entry.id!!)
+                                        loadData()
+                                    } catch (e: Exception) {
+                                        errorMessage = "Failed to delete: ${e.message}"
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
 
@@ -189,13 +196,19 @@ fun HealthScreen(
                         Text("Today's Exercises:", fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
                     }
                     items(todayExercises) { entry ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
-                        ) {
-                            Text("${entry.type}: ${entry.duration} min, ${entry.calories_burned ?: 0} cal", modifier = Modifier.padding(12.dp), color = Color(0xFF28A745))
-                        }
+                        HealthItemCard(
+                            content = "${entry.type}: ${entry.duration} min, ${entry.calories_burned ?: 0} cal",
+                            onDelete = {
+                                scope.launch {
+                                    try {
+                                        api.deleteExercise("Bearer $token", entry.id!!)
+                                        loadData()
+                                    } catch (e: Exception) {
+                                        errorMessage = "Failed to delete: ${e.message}"
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
 
@@ -208,13 +221,19 @@ fun HealthScreen(
                         Text("Today's Meals:", fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
                     }
                     items(todayMeals) { entry ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
-                        ) {
-                            Text("${entry.description} - ${entry.calories ?: 0} cal", modifier = Modifier.padding(12.dp), color = Color(0xFF28A745))
-                        }
+                        HealthItemCard(
+                            content = "${entry.description} - ${entry.calories ?: 0} cal",
+                            onDelete = {
+                                scope.launch {
+                                    try {
+                                        api.deleteMeal("Bearer $token", entry.id!!)
+                                        loadData()
+                                    } catch (e: Exception) {
+                                        errorMessage = "Failed to delete: ${e.message}"
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
 
@@ -241,3 +260,62 @@ fun HealthScreen(
     }
 }
 
+@Composable
+fun HealthItemCard(
+    content: String,
+    onDelete: () -> Unit
+) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                content, 
+                modifier = Modifier.weight(1f).padding(12.dp), 
+                color = Color(0xFF28A745)
+            )
+            IconButton(onClick = { showDeleteConfirm = true }) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = Color(0xFFFF6B6B)
+                )
+            }
+        }
+    }
+    
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            containerColor = Color(0xFF1E1E1E),
+            title = { Text("Confirm Delete", color = Color.White) },
+            text = { Text("Are you sure you want to delete this item?", color = Color.Gray) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirm = false
+                        onDelete()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B6B))
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showDeleteConfirm = false },
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
