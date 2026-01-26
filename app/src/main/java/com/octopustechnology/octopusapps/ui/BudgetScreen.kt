@@ -263,7 +263,7 @@ fun BudgetScreen(
             onDismiss = { showAddDialog = null },
             onSuccess = {
                 showAddDialog = null
-                loadData()
+                refresh()
             }
         )
     }

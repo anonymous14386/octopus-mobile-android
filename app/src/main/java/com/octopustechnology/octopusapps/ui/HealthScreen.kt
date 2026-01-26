@@ -32,30 +32,33 @@ fun HealthScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf<String?>(null) }
+    var refreshTrigger by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
 
-    val loadData = {
-        scope.launch {
-            isLoading = true
-            try {
-                val authHeader = "Bearer $token"
-                val weightsResp = api.getWeights(authHeader)
-                val mealsResp = api.getMeals(authHeader)
-                val exercisesResp = api.getExercises(authHeader)
-                weights = weightsResp.data
-                meals = mealsResp.data
-                exercises = exercisesResp.data
-                errorMessage = ""
-            } catch (e: Exception) {
-                errorMessage = "Error loading data: ${e.message}"
-            } finally {
-                isLoading = false
-            }
+    suspend fun loadData() {
+        isLoading = true
+        try {
+            val authHeader = "Bearer $token"
+            val weightsResp = api.getWeights(authHeader)
+            val mealsResp = api.getMeals(authHeader)
+            val exercisesResp = api.getExercises(authHeader)
+            weights = weightsResp.data
+            meals = mealsResp.data
+            exercises = exercisesResp.data
+            errorMessage = ""
+        } catch (e: Exception) {
+            errorMessage = "Error loading data: ${e.message}"
+        } finally {
+            isLoading = false
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(refreshTrigger) {
         loadData()
+    }
+
+    fun refresh() {
+        refreshTrigger++
     }
 
     // Calculate stats
@@ -103,7 +106,7 @@ fun HealthScreen(
                     text = errorMessage,
                     color = MaterialTheme.colorScheme.error
                 )
-                Button(onClick = { loadData() }, modifier = Modifier.padding(top = 16.dp)) {
+                Button(onClick = { refresh() }, modifier = Modifier.padding(top = 16.dp)) {
                     Text("Retry")
                 }
             }
@@ -177,7 +180,7 @@ fun HealthScreen(
                                 scope.launch {
                                     try {
                                         api.deleteWeight("Bearer $token", entry.id!!)
-                                        loadData()
+                                        refresh()
                                     } catch (e: Exception) {
                                         errorMessage = "Failed to delete: ${e.message}"
                                     }
@@ -202,7 +205,7 @@ fun HealthScreen(
                                 scope.launch {
                                     try {
                                         api.deleteExercise("Bearer $token", entry.id!!)
-                                        loadData()
+                                        refresh()
                                     } catch (e: Exception) {
                                         errorMessage = "Failed to delete: ${e.message}"
                                     }
@@ -227,7 +230,7 @@ fun HealthScreen(
                                 scope.launch {
                                     try {
                                         api.deleteMeal("Bearer $token", entry.id!!)
-                                        loadData()
+                                        refresh()
                                     } catch (e: Exception) {
                                         errorMessage = "Failed to delete: ${e.message}"
                                     }
@@ -252,7 +255,7 @@ fun HealthScreen(
                     onDismiss = { showAddDialog = null },
                     onSuccess = {
                         showAddDialog = null
-                        loadData()
+                        refresh()
                     }
                 )
             }
